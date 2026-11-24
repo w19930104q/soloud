@@ -549,6 +549,36 @@ end
 
 -- 8< -- 8< -- 8< -- 8< -- 8< -- 8< -- 8< -- 8< -- 8< -- 8< --
 
+  project "limitertest"
+	kind "ConsoleApp"
+	language "C++"
+	files {
+	  "../demos/limitertest/**.c*"
+	  }
+	includedirs {
+	  "../include"
+	}
+if (WITH_ALSA == 1) then
+	links {"asound"}
+end
+if (WITH_JACK == 1) then
+	links { "jack" }
+end
+if (WITH_COREAUDIO == 1) then
+	links {"AudioToolbox.framework"}
+end
+
+
+		links {"SoloudStatic"}
+		if (not os.is("windows")) then
+		  links { "pthread" }
+		  links { "dl" }
+		end
+
+		targetname "limitertest"
+
+-- 8< -- 8< -- 8< -- 8< -- 8< -- 8< -- 8< -- 8< -- 8< -- 8< --
+
   project "enumerate"
 	kind "ConsoleApp"
 	language "C++"
