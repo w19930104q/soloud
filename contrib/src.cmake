@@ -37,6 +37,7 @@ set (TARGET_HEADERS
 	${HEADER_PATH}/soloud_speech.h
 	${HEADER_PATH}/soloud_tedsid.h
 	${HEADER_PATH}/soloud_thread.h
+	${HEADER_PATH}/soloud_tremolo.h
 	${HEADER_PATH}/soloud_vic.h
 	${HEADER_PATH}/soloud_vizsn.h
 	${HEADER_PATH}/soloud_wav.h
@@ -116,6 +117,9 @@ set (AUDIOSOURCES_SOURCES
 	${AUDIOSOURCES_PATH}/tedsid/soloud_tedsid.cpp
 	${AUDIOSOURCES_PATH}/tedsid/ted.cpp
 	${AUDIOSOURCES_PATH}/tedsid/ted.h
+
+	# tremolo
+	${AUDIOSOURCES_PATH}/tremolo/soloud_tremolo.cpp
 
 	# vic
 	${AUDIOSOURCES_PATH}/vic/soloud_vic.cpp
