@@ -9,6 +9,7 @@ set (LINK_LIBRARIES)
 set (TARGET_HEADERS
 	${HEADER_PATH}/soloud.h
 	${HEADER_PATH}/soloud_audiosource.h
+	${HEADER_PATH}/soloud_automation.h
 	${HEADER_PATH}/soloud_ay.h
 	${HEADER_PATH}/soloud_bassboostfilter.h
 	${HEADER_PATH}/soloud_biquadresonantfilter.h
@@ -73,6 +74,9 @@ set (CORE_SOURCES
 # Audiosources
 set (AUDIOSOURCES_PATH ${SOURCE_PATH}/audiosource)
 set (AUDIOSOURCES_SOURCES
+	# automation
+	${AUDIOSOURCES_PATH}/automation/soloud_automation.cpp
+
 	# ay
 	${AUDIOSOURCES_PATH}/ay/chipplayer.cpp
 	${AUDIOSOURCES_PATH}/ay/chipplayer.h

@@ -1050,13 +1050,63 @@ namespace SoLoud
 
 
 
-	void panAndExpand(AudioSourceInstance *aVoice, float *aBuffer, unsigned int aSamplesToRead, unsigned int aBufferSize, float *aScratch, unsigned int aChannels)
+	void panAndExpand(AudioSourceInstance *aVoice, float *aBuffer, unsigned int aSamplesToRead, unsigned int aBufferSize, float *aScratch, unsigned int aChannels, bool aPassthrough)
 	{
 #ifdef SOLOUD_SSE_INTRINSICS
 		SOLOUD_ASSERT(((size_t)aBuffer & 0xf) == 0);
 		SOLOUD_ASSERT(((size_t)aScratch & 0xf) == 0);
 		SOLOUD_ASSERT(((size_t)aBufferSize & 0xf) == 0);
 #endif
+
+		if (aPassthrough)
+		{
+			// Frame-accurate path: apply the current per-channel gain as a
+			// constant for every frame in the buffer. No cross-buffer ramp is
+			// used, so the result for frame N is identical regardless of where
+			// output buffers are split. This mirrors the channel mapping of the
+			// regular path for the channel counts the engine supports.
+			unsigned int j, k;
+			float gain[MAX_CHANNELS];
+			for (k = 0; k < aChannels; k++)
+				gain[k] = aVoice->mChannelVolume[k] * aVoice->mOverallVolume;
+
+			unsigned int srcChannels = aVoice->mChannels;
+			if (srcChannels > MAX_CHANNELS)
+				srcChannels = MAX_CHANNELS;
+
+			for (j = 0; j < aSamplesToRead; j++)
+			{
+				for (k = 0; k < aChannels; k++)
+				{
+					float s = 0.0f;
+					// Simplified down/up-mix consistent with the ramped path:
+					// mono target sums all source planes; multi-channel targets
+					// use the matching source plane when present, else the first.
+					if (aChannels == 1)
+					{
+						unsigned int c;
+						for (c = 0; c < srcChannels; c++)
+							s += aScratch[c * aBufferSize + j];
+					}
+					else if (k < srcChannels)
+					{
+						s = aScratch[k * aBufferSize + j];
+					}
+					else
+					{
+						// Fewer source planes than target channels: reuse the
+						// first source plane for this frame.
+						s = aScratch[j];
+					}
+					aBuffer[j + k * aBufferSize] += s * gain[k];
+				}
+			}
+
+			for (k = 0; k < aChannels; k++)
+				aVoice->mCurrentChannelVolume[k] = gain[k];
+			return;
+		}
+
 		float pan[MAX_CHANNELS]; // current speaker volume
 		float pand[MAX_CHANNELS]; // destination speaker volume
 		float pani[MAX_CHANNELS]; // speaker volume increment per sample
@@ -1644,11 +1694,79 @@ namespace SoLoud
 					unsigned int k;
 					for (k = 0; k < voice->mChannels; k++)
 					{
-						memset(aScratch + k * aBufferSize, 0, sizeof(float) * outofs); 
+						memset(aScratch + k * aBufferSize, 0, sizeof(float) * outofs);
 					}
-				}												
+				}
 
-				while (step_fixed != 0 && outofs < aSamplesToRead)
+				// Frame-accurate passthrough. When the source runs at exactly
+				// the mixer's rate (one source frame per output frame) and has
+				// no per-stream filters, bypass the block-based resampler
+				// entirely and pull frames directly. The resampler path pulls
+				// fixed SAMPLE_GRANULARITY blocks through ping-pong buffers, so
+				// its output depends on where output buffers are split; the
+				// passthrough instead renders frame N from source frame N no
+				// matter the buffer boundaries, which is what frame-accurate
+				// automation relies on.
+				bool passthrough = (step_fixed == FIXPOINT_FRAC_MUL);
+				if (passthrough)
+				{
+					for (j = 0; j < FILTERS_PER_STREAM; j++)
+					{
+						if (voice->mFilter[j])
+							passthrough = false;
+					}
+				}
+
+				if (passthrough)
+				{
+					unsigned int remaining = aSamplesToRead - outofs;
+					// Pull in chunks no larger than the scratch pitch so a
+					// single getAudio() call never overruns aScratch.
+					while (remaining)
+					{
+						unsigned int chunk = remaining;
+						if (chunk > aBufferSize)
+							chunk = aBufferSize;
+						unsigned int got = 0;
+						if (!voice->hasEnded() || (voice->mFlags & AudioSourceInstance::LOOPING))
+						{
+							got = voice->getAudio(aScratch, chunk, aBufferSize);
+							if (got < chunk && (voice->mFlags & AudioSourceInstance::LOOPING))
+							{
+								while (got < chunk && voice->seek(voice->mLoopPoint, mScratch.mData, mScratchSize) == SO_NO_ERROR)
+								{
+									voice->mLoopCount++;
+									unsigned int inc = voice->getAudio(aScratch + got, chunk - got, aBufferSize);
+									got += inc;
+									if (inc == 0) break;
+								}
+							}
+						}
+						if (got < chunk)
+						{
+							unsigned int k2;
+							for (k2 = 0; k2 < voice->mChannels; k2++)
+								memset(aScratch + k2 * aBufferSize + got, 0, sizeof(float) * (chunk - got));
+						}
+						// Shift this chunk to its final position; panAndExpand()
+						// reads the first aSamplesToRead frames of each plane.
+						if (outofs)
+						{
+							unsigned int k2;
+							for (k2 = 0; k2 < voice->mChannels; k2++)
+								memmove(aScratch + k2 * aBufferSize + outofs,
+								        aScratch + k2 * aBufferSize,
+								        sizeof(float) * chunk);
+						}
+						outofs += chunk;
+						remaining -= chunk;
+					}
+					// The resampler state must not advance for this voice.
+					voice->mSrcOffset = 0;
+					voice->mLeftoverSamples = 0;
+				}
+
+				while (!passthrough && step_fixed != 0 && outofs < aSamplesToRead)
 				{
 					if (voice->mLeftoverSamples == 0)
 					{
@@ -1791,7 +1909,7 @@ namespace SoLoud
 				}
 				
 				// Handle panning and channel expansion (and/or shrinking)
-				panAndExpand(voice, aBuffer, aSamplesToRead, aBufferSize, aScratch, aChannels);
+				panAndExpand(voice, aBuffer, aSamplesToRead, aBufferSize, aScratch, aChannels, passthrough);
 
 				// clear voice if the sound is over
 				if (!(voice->mFlags & (AudioSourceInstance::LOOPING | AudioSourceInstance::DISABLE_AUTOSTOP)) && voice->hasEnded())

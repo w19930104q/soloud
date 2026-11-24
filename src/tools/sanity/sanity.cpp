@@ -37,6 +37,7 @@ distribution.
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
 
 #include "soloud.h"
 #include "soloud_bassboostfilter.h"
@@ -100,7 +101,7 @@ long getmsec()
 
 	clock_gettime(CLOCK_MONOTONIC, &ts);
 
-	return (ts->tv_sec * 1000) + (ts->tv_nsec / 1000000)
+	return (ts.tv_sec * 1000) + (ts.tv_nsec / 1000000);
 }
 #endif
 
@@ -124,13 +125,15 @@ void writeHeader()
 		0x80, 0x3e, 0x00, 0x00  // bytes of data
 		// 46 bytes up to this point
 	};
-	int *flen = (int*)(buf + 4);
-	int *dlen = (int*)(buf + 42);
 	if (!lastknownfile || !lastknownwrite)
 		return;
 	int len = ftell(lastknownfile);
-	*flen = len - 8;
-	*dlen = len - 46;
+	// Use memcpy rather than casting an unsigned char* to int*: the byte buffer
+	// has no 4-byte alignment guarantee, and an unaligned int store is UB.
+	int flen = len - 8;
+	int dlen = len - 46;
+	memcpy(buf + 4, &flen, sizeof(flen));
+	memcpy(buf + 42, &dlen, sizeof(dlen));
 	fseek(lastknownfile, 0, SEEK_SET);
 	fwrite(buf, 1, 46, lastknownfile);
 }
@@ -157,7 +160,10 @@ void generateTestWave(SoLoud::Wav &aWav)
 	int i;
 	for (i = 0; i < 16000; i++)
 	{
-		buf[i + 44] = ((i&1)?1:-1)*(char)((sin(i*i * 0.000001) * 0x7f) + i);
+		// Reduce modulo 256 before narrowing so the value always fits in a
+		// byte; storing it in unsigned char avoids signed-char overflow UB.
+		int v = ((i & 1) ? 1 : -1) * (int)((sin(i * i * 0.000001) * 0x7f) + i);
+		buf[i + 44] = (unsigned char)(v & 0xff);
 	}
 	aWav.loadMem(buf, buflen, true, false);
 }

@@ -832,6 +832,28 @@ if (WITH_TOOLS == 1) then
 		end
 
 		targetname "sanity"
+	end
+
+-- 8< -- 8< -- 8< -- 8< -- 8< -- 8< -- 8< -- 8< -- 8< -- 8< --
+if (WITH_TOOLS == 1) then
+
+	project "automationtest"
+		kind "ConsoleApp"
+		language "C++"
+		includedirs {
+		  "../include"
+		}
+		files {
+		  "../src/tools/automationtest/**.cpp"
+		}
+
+		links {"SoloudStatic"}
+		if (not os.is("windows")) then
+		  links { "pthread" }
+		  links { "dl" }
+		end
+
+		targetname "automationtest"
 end
 
 -- 8< -- 8< -- 8< -- 8< -- 8< -- 8< -- 8< -- 8< -- 8< -- 8< --
