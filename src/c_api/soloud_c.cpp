@@ -35,6 +35,7 @@ freely, subject to the following restrictions:
 #include "../include/soloud_bassboostfilter.h"
 #include "../include/soloud_biquadresonantfilter.h"
 #include "../include/soloud_bus.h"
+#include "../include/soloud_crossfade.h"
 #include "../include/soloud_dcremovalfilter.h"
 #include "../include/soloud_echofilter.h"
 #include "../include/soloud_fader.h"
@@ -1124,6 +1125,132 @@ double Bus_getLoopPoint(void * aClassPtr)
 void Bus_stop(void * aClassPtr)
 {
 	Bus * cl = (Bus *)aClassPtr;
+	cl->stop();
+}
+
+void Crossfade_destroy(void * aClassPtr)
+{
+	delete (Crossfade *)aClassPtr;
+}
+
+void * Crossfade_create()
+{
+	return (void *)new Crossfade;
+}
+
+int Crossfade_setParams(void * aClassPtr, AudioSource * aFrom, AudioSource * aTo, double aFadeTime)
+{
+	Crossfade * cl = (Crossfade *)aClassPtr;
+	return cl->setParams(*aFrom, *aTo, aFadeTime);
+}
+
+int Crossfade_setParamsEx(void * aClassPtr, AudioSource * aFrom, AudioSource * aTo, double aFadeTime,
+	float aFromStartGain, float aFromEndGain, double aFromOffset, double aToOffset)
+{
+	Crossfade * cl = (Crossfade *)aClassPtr;
+	return cl->setParams(*aFrom, *aTo, aFadeTime, aFromStartGain, aFromEndGain,
+		aFromOffset, aToOffset);
+}
+
+int Crossfade_setOutputParams(void * aClassPtr, float aSamplerate, unsigned int aChannels)
+{
+	Crossfade * cl = (Crossfade *)aClassPtr;
+	return cl->setOutputParams(aSamplerate, aChannels);
+}
+
+void Crossfade_setVolume(void * aClassPtr, float aVolume)
+{
+	Crossfade * cl = (Crossfade *)aClassPtr;
+	cl->setVolume(aVolume);
+}
+
+void Crossfade_setLooping(void * aClassPtr, int aLoop)
+{
+	Crossfade * cl = (Crossfade *)aClassPtr;
+	cl->setLooping(!!aLoop);
+}
+
+void Crossfade_setAutoStop(void * aClassPtr, int aAutoStop)
+{
+	Crossfade * cl = (Crossfade *)aClassPtr;
+	cl->setAutoStop(!!aAutoStop);
+}
+
+void Crossfade_set3dMinMaxDistance(void * aClassPtr, float aMinDistance, float aMaxDistance)
+{
+	Crossfade * cl = (Crossfade *)aClassPtr;
+	cl->set3dMinMaxDistance(aMinDistance, aMaxDistance);
+}
+
+void Crossfade_set3dAttenuation(void * aClassPtr, unsigned int aAttenuationModel, float aAttenuationRolloffFactor)
+{
+	Crossfade * cl = (Crossfade *)aClassPtr;
+	cl->set3dAttenuation(aAttenuationModel, aAttenuationRolloffFactor);
+}
+
+void Crossfade_set3dDopplerFactor(void * aClassPtr, float aDopplerFactor)
+{
+	Crossfade * cl = (Crossfade *)aClassPtr;
+	cl->set3dDopplerFactor(aDopplerFactor);
+}
+
+void Crossfade_set3dListenerRelative(void * aClassPtr, int aListenerRelative)
+{
+	Crossfade * cl = (Crossfade *)aClassPtr;
+	cl->set3dListenerRelative(!!aListenerRelative);
+}
+
+void Crossfade_set3dDistanceDelay(void * aClassPtr, int aDistanceDelay)
+{
+	Crossfade * cl = (Crossfade *)aClassPtr;
+	cl->set3dDistanceDelay(!!aDistanceDelay);
+}
+
+void Crossfade_set3dCollider(void * aClassPtr, AudioCollider * aCollider)
+{
+	Crossfade * cl = (Crossfade *)aClassPtr;
+	cl->set3dCollider(aCollider);
+}
+
+void Crossfade_set3dColliderEx(void * aClassPtr, AudioCollider * aCollider, int aUserData)
+{
+	Crossfade * cl = (Crossfade *)aClassPtr;
+	cl->set3dCollider(aCollider, aUserData);
+}
+
+void Crossfade_set3dAttenuator(void * aClassPtr, AudioAttenuator * aAttenuator)
+{
+	Crossfade * cl = (Crossfade *)aClassPtr;
+	cl->set3dAttenuator(aAttenuator);
+}
+
+void Crossfade_setInaudibleBehavior(void * aClassPtr, int aMustTick, int aKill)
+{
+	Crossfade * cl = (Crossfade *)aClassPtr;
+	cl->setInaudibleBehavior(!!aMustTick, !!aKill);
+}
+
+void Crossfade_setLoopPoint(void * aClassPtr, double aLoopPoint)
+{
+	Crossfade * cl = (Crossfade *)aClassPtr;
+	cl->setLoopPoint(aLoopPoint);
+}
+
+double Crossfade_getLoopPoint(void * aClassPtr)
+{
+	Crossfade * cl = (Crossfade *)aClassPtr;
+	return cl->getLoopPoint();
+}
+
+void Crossfade_setFilter(void * aClassPtr, unsigned int aFilterId, Filter * aFilter)
+{
+	Crossfade * cl = (Crossfade *)aClassPtr;
+	cl->setFilter(aFilterId, aFilter);
+}
+
+void Crossfade_stop(void * aClassPtr)
+{
+	Crossfade * cl = (Crossfade *)aClassPtr;
 	cl->stop();
 }
 

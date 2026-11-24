@@ -13,6 +13,7 @@ set (TARGET_HEADERS
 	${HEADER_PATH}/soloud_bassboostfilter.h
 	${HEADER_PATH}/soloud_biquadresonantfilter.h
 	${HEADER_PATH}/soloud_bus.h
+	${HEADER_PATH}/soloud_crossfade.h
 	${HEADER_PATH}/soloud_dcremovalfilter.h
 	${HEADER_PATH}/soloud_echofilter.h
 	${HEADER_PATH}/soloud_error.h
@@ -84,6 +85,9 @@ set (AUDIOSOURCES_SOURCES
 	${AUDIOSOURCES_PATH}/ay/sndrender.cpp
 	${AUDIOSOURCES_PATH}/ay/sndrender.h
 	${AUDIOSOURCES_PATH}/ay/soloud_ay.cpp
+
+	# crossfade
+	${AUDIOSOURCES_PATH}/crossfade/soloud_crossfade.cpp
 
 	# monotone
 	${AUDIOSOURCES_PATH}/monotone/soloud_monotone.cpp

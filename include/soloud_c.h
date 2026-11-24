@@ -139,6 +139,7 @@ typedef void * AudioSource;
 typedef void * BassboostFilter;
 typedef void * BiquadResonantFilter;
 typedef void * Bus;
+typedef void * Crossfade;
 typedef void * DCRemovalFilter;
 typedef void * EchoFilter;
 typedef void * Fader;
@@ -360,6 +361,31 @@ void Bus_setInaudibleBehavior(Bus * aBus, int aMustTick, int aKill);
 void Bus_setLoopPoint(Bus * aBus, double aLoopPoint);
 double Bus_getLoopPoint(Bus * aBus);
 void Bus_stop(Bus * aBus);
+
+/*
+ * Crossfade
+ */
+void Crossfade_destroy(Crossfade * aCrossfade);
+Crossfade * Crossfade_create();
+int Crossfade_setParams(Crossfade * aCrossfade, AudioSource * aFrom, AudioSource * aTo, double aFadeTime);
+int Crossfade_setParamsEx(Crossfade * aCrossfade, AudioSource * aFrom, AudioSource * aTo, double aFadeTime, float aFromStartGain /* = 1.0f */, float aFromEndGain /* = 0.0f */, double aFromOffset /* = 0.0 */, double aToOffset /* = 0.0 */);
+int Crossfade_setOutputParams(Crossfade * aCrossfade, float aSamplerate, unsigned int aChannels);
+void Crossfade_setVolume(Crossfade * aCrossfade, float aVolume);
+void Crossfade_setLooping(Crossfade * aCrossfade, int aLoop);
+void Crossfade_setAutoStop(Crossfade * aCrossfade, int aAutoStop);
+void Crossfade_set3dMinMaxDistance(Crossfade * aCrossfade, float aMinDistance, float aMaxDistance);
+void Crossfade_set3dAttenuation(Crossfade * aCrossfade, unsigned int aAttenuationModel, float aAttenuationRolloffFactor);
+void Crossfade_set3dDopplerFactor(Crossfade * aCrossfade, float aDopplerFactor);
+void Crossfade_set3dListenerRelative(Crossfade * aCrossfade, int aListenerRelative);
+void Crossfade_set3dDistanceDelay(Crossfade * aCrossfade, int aDistanceDelay);
+void Crossfade_set3dCollider(Crossfade * aCrossfade, AudioCollider * aCollider);
+void Crossfade_set3dColliderEx(Crossfade * aCrossfade, AudioCollider * aCollider, int aUserData /* = 0 */);
+void Crossfade_set3dAttenuator(Crossfade * aCrossfade, AudioAttenuator * aAttenuator);
+void Crossfade_setInaudibleBehavior(Crossfade * aCrossfade, int aMustTick, int aKill);
+void Crossfade_setLoopPoint(Crossfade * aCrossfade, double aLoopPoint);
+double Crossfade_getLoopPoint(Crossfade * aCrossfade);
+void Crossfade_setFilter(Crossfade * aCrossfade, unsigned int aFilterId, Filter * aFilter);
+void Crossfade_stop(Crossfade * aCrossfade);
 
 /*
  * DCRemovalFilter
