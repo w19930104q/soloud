@@ -1,0 +1,169 @@
+## SoLoud::ChannelMixer
+
+
+The SoLoud::ChannelMixer is a composable audio source that wraps any other
+audio source and converts its speaker layout into a different layout through
+an explicit, user-editable channel mapping matrix. It can optionally resample
+the wrapped stream to a different output sample rate at the same time. The
+output layout and the output sample rate are applied by a single
+`configure()` call, so a layout switch and a rate switch form one atomic
+configuration transaction.
+
+Typical use cases are desktop players that have to feed different output
+layouts: folding stereo material down to mono without halving its perceived
+level, or playing 5.1 material on stereo speakers without leaking the
+low-frequency effects (LFE) channel into the left and right speakers.
+
+The wrapped source is not owned by the mixer; as with every other SoLoud
+source reference, the caller keeps the source object alive for as long as the
+mixer may play.
+
+### Channel layouts
+
+
+The mixer accepts the same speaker layouts the engine itself supports,
+identified by channel count: 1 (mono), 2 (stereo), 4 (quad), 6 (5.1) and
+8 (7.1). The channel order inside the multi-channel layouts is the one
+documented in soloud.h:
+
+|Index|5.1 / 7.1 speaker|
+|:----|:----------------|
+|0|Front left|
+|1|Front right|
+|2|Front center|
+|3|LFE|
+|4|Back left|
+|5|Back right|
+|6|Side left (7.1 only)|
+|7|Side right (7.1 only)|
+
+The `CHANNEL` enum in ChannelMixer names these indices
+(`ChannelMixer::FRONT_LEFT`, `ChannelMixer::LFE`, and so on).
+
+### Default mapping rules
+
+
+`configure()` generates a default mapping matrix. Every coefficient is either
+an identical-speaker pass-through at gain 1.0, the equal-power fold gain
+`1/sqrt(2)`, or one of the coefficients already used by the engine's internal
+`panAndExpand()` mixer (0.5, 0.3, 0.2, 0.7). Two rules are worth calling out:
+
+- A stereo pair folded onto a single speaker is combined at equal power, so a
+  stereo frame `(0.2, -0.4)` downmixes to `(0.2 + -0.4) / sqrt(2)`, i.e.
+  `-0.141421`, rather than being averaged down to half volume.
+- The LFE channel only ever feeds an LFE output. When the target layout has no
+  LFE speaker (mono, stereo, quad), the LFE is dropped instead of being mixed
+  into the full-range speakers, and no LFE is synthesized from full-range
+  material when upmixing.
+
+Original stereo material configured for stereo output at its native sample
+rate passes through bit-exact: the wrapped source's samples are forwarded
+verbatim with no matrix math and no resampling.
+
+### ChannelMixer.configure()
+
+
+Wraps a source and applies the whole configuration transaction in one call.
+
+    // Play a 5.1 source on stereo speakers at the source's own rate.
+    gMixer.configure(&gSurround, 2);
+
+    // Fold a stereo source to mono and resample the output to 48000 Hz.
+    gMixer.configure(&gMusic, 1, 48000.0f);
+
+The parameters are validated before any state changes. An invalid layout
+(anything other than 1, 2, 4, 6 or 8 channels), a null source without a
+previously set source, or a negative/NaN sample rate makes the call return
+`INVALID_PARAMETER` and leaves the current configuration, and any instances
+already playing, untouched. A sample rate of 0 (the default) means the mixer
+follows the wrapped source's native rate.
+
+### ChannelMixer.setSource()
+
+
+Replaces only the wrapped source. The output layout, mapping matrix and
+output sample rate stay in effect. The new source must produce the same
+number of channels as the matrix expects.
+
+    gMixer.setSource(&gNextSong); // same layout, new material
+
+### ChannelMixer.setMapping(), ChannelMixer.getMapping()
+
+
+Overwrites or reads one matrix coefficient. The convention is
+`mMapping[dst][src]`: the gain of source channel `aSrcChannel` into output
+channel `aDstChannel`. This is what makes the source composable - any
+coefficient, including the LFE routing, can be customized.
+
+    // Mute the front center in a 5.1 -> 5.1 pass-through.
+    gMixer.setMapping(SoLoud::ChannelMixer::FRONT_CENTER,
+                      SoLoud::ChannelMixer::FRONT_CENTER, 0.0f);
+
+Out-of-range channel indices return `INVALID_PARAMETER`.
+
+### ChannelMixer.resetMapping()
+
+
+Regenerates the default mapping matrix for the current source and output
+layouts, discarding any custom coefficients set with `setMapping()`.
+
+    gMixer.resetMapping();
+
+### ChannelMixer.getSourceChannels(), ChannelMixer.getOutputSamplerate()
+
+
+Return the wrapped source's channel count and the mixer's effective output
+sample rate. When `configure()` was called with rate 0, the reported rate is
+the wrapped source's native rate.
+
+### ChannelMixer.setLooping(), ChannelMixer.setLoopPoint(), ChannelMixer.getLoopPoint()
+
+
+Adjusting the looping of a channel mixer has no effect; loop behavior is
+controlled by the wrapped source.
+
+\pagebreak
+### ChannelMixer.setFilter()
+
+
+As with any other audio source, you can attach filters to a channel mixer.
+
+    gMixer.setFilter(0, &gLofi);
+
+### ChannelMixer.stop()
+
+
+You can stop all instances of a channel mixer with stop(). This is equivalent
+of calling soloud.stopAudioSource() with the sound source.
+
+    gMixer.stop();
+
+### ChannelMixer.setInaudibleBehavior()
+
+Set the inaudible behavior of the sound. By default, if a sound is
+inaudible, it's paused, and will resume when it becomes audible again.
+With this function you can tell SoLoud to either kill the sound if it
+becomes inaudible, or to keep ticking the sound even if it's
+inaudible.
+
+	// Keep mixing even when nothing is heard.
+	gMixer.setInaudibleBehavior(true, false);
+
+### ChannelMixer.setVolume()
+
+Set the default volume of the instances created from this audio source.
+
+    gMixer.setVolume(0.9f);
+
+### Inherited 3d audio interfaces
+
+Like all other audio sources, the channel mixer inherits the 3d audio interfaces. Please refer to the 3d audio chapter for details on:
+
+- ChannelMixer.set3dMinMaxDistance()
+- ChannelMixer.set3dAttenuation()
+- ChannelMixer.set3dDopplerFactor()
+- ChannelMixer.set3dProcessing()
+- ChannelMixer.set3dListenerRelative()
+- ChannelMixer.set3dDistanceDelay()
+- ChannelMixer.set3dCollider()
+- ChannelMixer.set3dAttenuator()
