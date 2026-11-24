@@ -15,6 +15,7 @@ set (TARGET_HEADERS
 	${HEADER_PATH}/soloud_bus.h
 	${HEADER_PATH}/soloud_dcremovalfilter.h
 	${HEADER_PATH}/soloud_echofilter.h
+	${HEADER_PATH}/soloud_envdelay.h
 	${HEADER_PATH}/soloud_error.h
 	${HEADER_PATH}/soloud_fader.h
 	${HEADER_PATH}/soloud_fft.h
@@ -84,6 +85,9 @@ set (AUDIOSOURCES_SOURCES
 	${AUDIOSOURCES_PATH}/ay/sndrender.cpp
 	${AUDIOSOURCES_PATH}/ay/sndrender.h
 	${AUDIOSOURCES_PATH}/ay/soloud_ay.cpp
+
+	# envdelay
+	${AUDIOSOURCES_PATH}/envdelay/soloud_envdelay.cpp
 
 	# monotone
 	${AUDIOSOURCES_PATH}/monotone/soloud_monotone.cpp

@@ -15,6 +15,7 @@ include_directories (${SOURCE_PATH}/common/imgui)
 # soloud_add_demo(c_test ${SOURCE_PATH}/c_test/main.c)
 soloud_add_demo(enumerate ${SOURCE_PATH}/enumerate/main.cpp)
 # soloud_add_demo(env ${SOURCE_PATH}/env/main.cpp)
+soloud_add_demo(envdelay_test ${SOURCE_PATH}/envdelay_test/main.cpp)
 # soloud_add_demo(megademo
 # 	${SOURCE_PATH}/megademo/3dtest.cpp
 # 	${SOURCE_PATH}/megademo/main.cpp

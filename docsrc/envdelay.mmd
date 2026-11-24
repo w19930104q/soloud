@@ -1,0 +1,58 @@
+## SoLoud::EnvDelay
+
+The environment delay source wraps another audio source (such as a Wav or
+WavStream) with a feedback delay line, producing a continuous sequence of
+dry signal, a first reflection, repeated feedback taps and a decaying tail.
+
+Unlike a filter, EnvDelay is itself an audio source. It stays alive after
+the wrapped source has finished, and keeps generating the feedback tail
+until every reflection has decayed to silence. This means the echo is not
+cut short when the source material ends or the playing voice would
+otherwise be stopped.
+
+### EnvDelay.setParams()
+
+Configure the delay before playback.
+
+    // Wrap a wav with a 2-frame delay, 0.5 feedback and 0.5 wet level
+    gEnvDelay.setParams(gWav, 2, 0.5f, 0.5f);
+
+The parameters are:
+
+- aSource - the dry audio source to wrap. The EnvDelay does not take
+  ownership of the source.
+- aDelayFrames - the delay length in source frames. Must be greater than
+  zero (and below an internal sanity limit).
+- aFeedback - the feedback gain, in the range [0..1[. A value of 0.5
+  halves each repeated reflection.
+- aWet - the echo mix level, in the range [0..1]. The dry level is
+  1 - aWet, so 0.5 produces an equal dry/wet mix.
+
+Invalid parameters are rejected at this configuration stage and the
+function returns INVALID_PARAMETER.
+
+### Output
+
+For each output frame the source emits the dry material mixed with the
+sample stored in the delay line `aDelayFrames` earlier. The dry material
+plus the feedback-scaled delayed sample are written back into the line,
+which generates the repeated reflections.
+
+As an example, a single unit pulse wrapped with a delay of 2 frames,
+feedback 0.5 and wet 0.5 produces:
+
+    frame  0: dry 0.5
+    frame  2: echo 0.5
+    frame  4: echo 0.25
+    frame  6: echo 0.125
+    ...
+
+After the wrapped source ends, this sequence continues seamlessly until it
+falls below the silence threshold, at which point the source reports that
+it has ended.
+
+### EnvDelay.createInstance()
+
+Creates a play instance of the source. Normally called by Soloud::play().
+If the EnvDelay has not been configured with setParams(), no instance is
+created.

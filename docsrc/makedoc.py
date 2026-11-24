@@ -50,6 +50,7 @@ src = [
     "vizsn.mmd",
     "vic.mmd",
     "noise.mmd",
+    "envdelay.mmd",
     "filters.mmd",
     "biquadfilter.mmd",
     "echofilter.mmd",
