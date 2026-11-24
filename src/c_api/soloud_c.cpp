@@ -35,6 +35,7 @@ freely, subject to the following restrictions:
 #include "../include/soloud_bassboostfilter.h"
 #include "../include/soloud_biquadresonantfilter.h"
 #include "../include/soloud_bus.h"
+#include "../include/soloud_compressor.h"
 #include "../include/soloud_dcremovalfilter.h"
 #include "../include/soloud_echofilter.h"
 #include "../include/soloud_fader.h"
@@ -1666,6 +1667,58 @@ void Noise_setFilter(void * aClassPtr, unsigned int aFilterId, Filter * aFilter)
 void Noise_stop(void * aClassPtr)
 {
 	Noise * cl = (Noise *)aClassPtr;
+	cl->stop();
+}
+
+void Compressor_destroy(void * aClassPtr)
+{
+  delete (Compressor *)aClassPtr;
+}
+
+void * Compressor_create()
+{
+  return (void *)new Compressor;
+}
+
+int Compressor_setSource(void * aClassPtr, AudioSource * aSource)
+{
+	Compressor * cl = (Compressor *)aClassPtr;
+	return cl->setSource((AudioSource *)aSource);
+}
+
+int Compressor_setParams(void * aClassPtr, float aThreshold, float aRatio, float aAttack, float aRelease, float aMakeupGain)
+{
+	Compressor * cl = (Compressor *)aClassPtr;
+	return cl->setParams(aThreshold, aRatio, aAttack, aRelease, aMakeupGain);
+}
+
+void Compressor_setVolume(void * aClassPtr, float aVolume)
+{
+	Compressor * cl = (Compressor *)aClassPtr;
+	cl->setVolume(aVolume);
+}
+
+void Compressor_setLooping(void * aClassPtr, int aLoop)
+{
+	Compressor * cl = (Compressor *)aClassPtr;
+	cl->setLooping(!!aLoop);
+}
+
+void Compressor_setAutoStop(void * aClassPtr, int aAutoStop)
+{
+	Compressor * cl = (Compressor *)aClassPtr;
+	cl->setAutoStop(!!aAutoStop);
+}
+
+void Compressor_setFilter(void * aClassPtr, unsigned int aFilterId, Filter * aFilter)
+{
+	Compressor * cl = (Compressor *)aClassPtr;
+	cl->setFilter(aFilterId, aFilter);
+}
+
+void Compressor_stop(void * aClassPtr)
+{
+	Compressor * cl = (Compressor *)aClassPtr;
 	cl->stop();
 }
 

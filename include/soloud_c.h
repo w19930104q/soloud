@@ -139,6 +139,7 @@ typedef void * AudioSource;
 typedef void * BassboostFilter;
 typedef void * BiquadResonantFilter;
 typedef void * Bus;
+typedef void * Compressor;
 typedef void * DCRemovalFilter;
 typedef void * EchoFilter;
 typedef void * Fader;
@@ -485,6 +486,19 @@ void Noise_setLoopPoint(Noise * aNoise, double aLoopPoint);
 double Noise_getLoopPoint(Noise * aNoise);
 void Noise_setFilter(Noise * aNoise, unsigned int aFilterId, Filter * aFilter);
 void Noise_stop(Noise * aNoise);
+
+/*
+ * Compressor
+ */
+void Compressor_destroy(Compressor * aCompressor);
+Compressor * Compressor_create();
+int Compressor_setSource(Compressor * aCompressor, AudioSource * aSource);
+int Compressor_setParams(Compressor * aCompressor, float aThreshold, float aRatio, float aAttack /* = 0.01f */, float aRelease /* = 0.2f */, float aMakeupGain /* = 1.0f */);
+void Compressor_setVolume(Compressor * aCompressor, float aVolume);
+void Compressor_setLooping(Compressor * aCompressor, int aLoop);
+void Compressor_setAutoStop(Compressor * aCompressor, int aAutoStop);
+void Compressor_setFilter(Compressor * aCompressor, unsigned int aFilterId, Filter * aFilter);
+void Compressor_stop(Compressor * aCompressor);
 
 /*
  * Openmpt

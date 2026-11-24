@@ -271,6 +271,15 @@ EXPORTS
 	Noise_getLoopPoint
 	Noise_setFilter
 	Noise_stop
+	Compressor_destroy
+	Compressor_create
+	Compressor_setSource
+	Compressor_setParams
+	Compressor_setVolume
+	Compressor_setLooping
+	Compressor_setAutoStop
+	Compressor_setFilter
+	Compressor_stop
 	Openmpt_destroy
 	Openmpt_create
 	Openmpt_load
